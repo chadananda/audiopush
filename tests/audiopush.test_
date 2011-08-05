@@ -1,0 +1,91 @@
+<?php
+
+class audiopush_ClientTest extends DrupalWebTestCase {
+
+  function getInfo() {
+    return array(
+      'name'  => t('Audiopush Client'),
+      'description'  => t('Executes test suite for mp3 service client module.'),
+      'group' => t('Audiopush Tests'),
+    );
+  }
+ 
+  function setUp() {
+    parent::setUp('audiopush_client');    
+  }
+  
+  function tearDown() {
+    parent::tearDown();
+  }
+  
+  function build_expected($uuid, $nid, $state) {
+  	$obj = new StdClass();
+  	$obj->uuid = $uuid;
+  	$obj->nid = $nid;
+  	$obj->state = $state;
+  	
+  	return $obj;
+  }
+ 
+	/**
+	 * Tests to exercise the mp3client api
+	 */ 
+  function audiopush_client() {
+  	
+		$nodes = array();
+		$uuids = array();
+
+		// Create us some nodes to use for our tests
+		/* $nodes['created'] = */ 
+		$n = $this->drupalCreateNode(array('type' => 'audio'));
+		$uuids[$n->nid] = $uuid = uniqid();
+
+		$this->assertNotNull($n, t('Simpletest node is created'));
+		
+		// Verify that nodeapi hook has fired and inserted a new row in the database
+		$ret = db_query("SELECT * FROM {audiopush_client} WHERE nid=%d AND state=%d", array($n->nid, audiopush_STATE_CREATED));
+		$obj = db_fetch_object($ret);
+		$this->assertNotNull($obj->uuid, t('Created node fired insert hook, uuid = @uuid', array('@uuid' => $obj->uuid)));
+		$this->assertTrue(true, t('inserted row value = ' . sprint_r($obj)));
+		
+	  // Verify that new entries in CREATED state match expectations
+	  $expected = $this->build_expected($obj->uuid, $n->nid, audiopush_STATE_CREATED);
+	  $ret = db_query("SELECT * FROM {audiopush_client} WHERE uuid='%s'", array($expected->uuid));
+		$obj = db_fetch_object($ret);
+		$this->assertTrue(true, t('retrieved value = ' . sprint_r($obj)));
+		$this->assertEqual($expected->nid, $obj->nid, $expected->nid . " (nid) should be equal to " . $obj->nid);
+		$this->assertEqual($expected->uuid, $obj->uuid, $expected->uuid . " (uuid) should be equal to " . $obj->uuid);
+		$this->assertEqual($expected->state, $obj->state, $expected->state . " (state) should be equal to " . $obj->state);
+		
+		// Submit: send text to conversion service and verify return value
+		// TODO this does not work right under SimpleTest but works fine when invoked from a test hook.
+		// 1) Work around it?  reset db_prefix for this one command?
+		// 2) Figure out why this is happening and how to fix moving forward
+/* 	  $ret = audiopush_submit(uniqid(), 1); */
+/* 		$this->assertEqual($ret, audiopush_STATE_PENDING, t('submit returns PENDING state: ' . $ret)); */
+				
+		// Check: see if our job is done yet.  Keep checking till it is.
+		// TODO this suffers from the same XMLRPC issue as above.  Testing manually for now.
+			  
+	  // Submit: verify that call moved row state to PENDING	  
+/*
+	  $expected = $this->build_expected($uuids[$n->nid], $n->nid, audiopush_STATE_PENDING, date('Y-m-d H:i:s'));
+	  $ret = db_query("SELECT state FROM {audiopush_client} WHERE uuid='%s'", array($expcted->uuid));
+		$obj = db_fetch_object($ret);
+		$this->assertEqual($expected->state, $obj->state);  
+*/
+	}
+}
+
+/**
+ *  util function for dumping variables to logs.  Yes I know about var_dump.
+ */
+if (!function_exists('sprint_r')) {
+  function sprint_r($var) {
+    ob_start();
+    print_r($var);
+    $ret = ob_get_contents();
+    ob_end_clean();
+    return $ret;
+  }
+}

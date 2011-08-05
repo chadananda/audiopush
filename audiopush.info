@@ -1,0 +1,5 @@
+name = AudioPush
+description = Client interface for audio-push.com - an XMLRPC content promotion webservice.
+package = "* KOC"
+core = 6.x
+dependencies[] = upload

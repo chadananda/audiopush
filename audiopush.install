@@ -1,0 +1,113 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Audiopush webservice module install file 
+ *
+ * Provides access to the Audiopush webservice which generates audio files and podcasts
+ * for any content type and then promotes those automatically bringing quality
+ * traffic and backlinks to any site with quality content.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function audiopush_install() {
+  drupal_install_schema('audiopush');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function audiopush_uninstall() {
+  drupal_uninstall_schema('audiopush');
+}
+
+/**
+ * Get our schema all set up
+ */
+function audiopush_schema() {
+  $schema['audiopush'] = array(
+    'description' => t('audiopush table to track request status'),
+    'fields' => array(
+      'uuid' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('unique identifier for this job'),
+      ),  
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('node id associated with this request'),
+      ),
+      'state' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('workflow state the job is in'),
+      ),
+      'statustime' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => '0',
+        'description' => t('timestamp associated with last status change'),
+      ),
+    ),
+    'primary key' => array('nid', 'uuid'),
+  );
+  return $schema;
+}
+
+
+/*
+ * hook_update 
+ */
+function audiopush_update_1() {
+  $ret = array();
+  db_add_field($ret, 'audiopush', 'filename', array(
+   'type' => 'varchar',
+   'length' => 255,
+   'not null' => TRUE,
+   'default' => '',
+   'description' => t('unique local filename for this mp3 file'), 
+  ));
+  db_add_field($ret, 'audiopush', 'duration', array(
+   'type' => 'varchar',
+   'length' => 10,
+   'not null' => TRUE,
+   'default' => '',
+   'description' => t('audio duration for this mp3 file'), 
+  ));
+  db_add_field($ret, 'audiopush', 'keywords', array(
+   'type' => 'varchar',
+   'length' => 255,
+   'not null' => TRUE,
+   'default' => '',
+   'description' => t('comma delimited list of suggested keywords'), 
+  ));  
+  return $ret; 
+}
+
+/*
+ * hook_update 
+ */
+function audiopush_update_2() {
+  $ret = array();
+  db_add_field($ret, 'audiopush', 'fid', array(
+   'type' => 'int', 
+   'not null' => TRUE,
+   'default' => 0,
+   'description' => t('file table id'), 
+  )); 
+  return $ret; 
+}
+
+
+
+
